@@ -104,7 +104,7 @@ A clickable front-end prototype with **sample data** for a fictional fintech, *J
 
 ## Team
 
-- **Huda Ahmad**: Founder & CEO (GRC & Product)
+- **Huda Ahmad**: Founder & CEO (Product & Operations)
 - **Omar Nofal**: Co-Founder (Business & Customer Experience)
 - **CTO / AI Engineer**: we're hiring. Get in touch!
 
