@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrustLayer AI — Agentic GRC Prototype</title>
+<meta name="description" content="TrustLayer AI: an agentic GRC layer that turns regulatory requirements into structured, auditable compliance decisions with human oversight. Interactive prototype with sample data.">
+<style>
+:root{
+  --text:#2C2C2B;--muted:#6F6C67;--canvas:#FFFFFF;--soft:#F9F8F7;--soft2:#F0EFED;--line:#E6E5E3;
+  --blue:#2783DE;--blueSoft:#E5F2FC;--blueDark:#1F6DB9;--green:#3B8A60;--greenSoft:#E8F1EC;
+  --orange:#B8661F;--orangeSoft:#FBEBDE;--red:#C9473B;--redSoft:#FCE9E7;--ink:#1D1D1C;
+  --r:8px;--shadow:0 1px 2px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.04);
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:Menlo,Consolas,"SFMono-Regular",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--soft);color:var(--text);font:16px/1.5 var(--font);overflow-x:hidden}
+@media (min-width:821px){body{background:linear-gradient(to right,#fff 244px,var(--soft) 244px)}}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.app{display:flex;min-height:100vh}
+/* Sidebar */
+.side{width:244px;flex:0 0 244px;background:var(--canvas);border-right:1px solid var(--line);padding:20px 12px;position:sticky;top:0;height:100vh;overflow:auto;display:flex;flex-direction:column;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px}
+.brand b{font-size:17px;letter-spacing:-.01em}
+.brand span{color:var(--blue)}
+.ws{border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;background:var(--soft);font-size:14px}
+.ws small{display:block;color:var(--muted);font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.navsec{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;padding:8px 10px 4px}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{display:flex;align-items:center;gap:10px;width:100%;min-height:40px;padding:8px 10px;border:0;background:transparent;border-radius:6px;text-align:left;font-size:14.5px;color:var(--text)}
+.nav button:hover{background:var(--soft2)}
+.nav button.on{background:var(--blueSoft);color:var(--blueDark);font-weight:600}
+.nav svg{width:18px;height:18px;flex:0 0 18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.count{margin-left:auto;font-size:12px;font-weight:600;min-width:22px;height:20px;padding:0 6px;border-radius:10px;background:var(--orangeSoft);color:var(--orange);display:inline-flex;align-items:center;justify-content:center}
+.sidefoot{margin-top:auto;font-size:12px;color:var(--muted);padding:8px 10px;border-top:1px solid var(--line)}
+/* Main */
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;gap:12px;padding:12px 32px;border-bottom:1px solid var(--line);background:var(--canvas);position:sticky;top:0;z-index:5}
+.crumb{font-size:14px;color:var(--muted)}
+.crumb b{color:var(--text);font-weight:600}
+.topbar .sp{flex:1}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 8px;border-radius:10px;white-space:nowrap}
+.tag.blue{background:var(--blueSoft);color:var(--blueDark)}.tag.green{background:var(--greenSoft);color:var(--green)}
+.tag.orange{background:var(--orangeSoft);color:var(--orange)}.tag.red{background:var(--redSoft);color:var(--red)}
+.tag.gray{background:var(--soft2);color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:8px 14px;border-radius:var(--r);border:1px solid var(--blue);background:var(--blue);color:#fff;font-size:14.5px;font-weight:600;white-space:nowrap}
+.btn:hover{background:var(--blueDark);border-color:var(--blueDark)}
+.btn.ghost{background:var(--canvas);color:var(--text);border-color:var(--line)}
+.btn.ghost:hover{background:var(--soft2)}
+.btn.green{background:var(--green);border-color:var(--green)}
+.btn.sm{min-height:36px;padding:6px 10px;font-size:13.5px}
+.btn:disabled{opacity:.55;cursor:default}
+.menu{display:none}
+.view{padding:32px;max-width:1180px;width:100%;margin:0 auto}
+.h1{font-size:28px;line-height:1.2;letter-spacing:-.02em;margin:0 0 6px;font-weight:700}
+.sub{color:var(--muted);margin:0 0 24px;max-width:720px}
+.head{display:flex;align-items:flex-start;gap:16px;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px}
+.card{background:var(--canvas);border:1px solid var(--line);border-radius:12px;padding:20px}
+.card h3{margin:0 0 12px;font-size:16px}
+.grid{display:grid;gap:16px}
+.g4{grid-template-columns:repeat(4,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}.g21{grid-template-columns:2fr 1fr}.g12{grid-template-columns:1fr 1.4fr}
+.kpi small{display:block;color:var(--muted);font-size:13.5px}
+.kpi .v{font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.15;margin-top:4px}
+.kpi .n{font-size:13.5px;color:var(--muted);margin-top:4px}
+.mt,.card .mt,.json.mt{margin-top:16px}.mt2,.card .mt2{margin-top:24px}.mt3{margin-top:32px}
+.muted{color:var(--muted)}.small{font-size:14px}
+.chain{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px;font-weight:600;letter-spacing:.03em}
+.chain span{padding:5px 9px;border-radius:6px;background:var(--soft2);color:var(--text)}
+.chain span.on{background:var(--blueSoft);color:var(--blueDark)}
+.chain i{color:var(--muted);font-style:normal}
+/* Score ring */
+.ringwrap{display:flex;align-items:center;gap:20px}
+.ring{--p:0;width:132px;height:132px;flex:0 0 132px;border-radius:50%;background:conic-gradient(var(--blue) calc(var(--p)*1%),var(--soft2) 0);display:grid;place-items:center;transition:--p .6s}
+.ring>div{width:104px;height:104px;border-radius:50%;background:var(--canvas);display:grid;place-items:center;text-align:center}
+.ring b{font-size:34px;line-height:1;letter-spacing:-.03em}
+.ring small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.bar{height:8px;border-radius:4px;background:var(--soft2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--blue);border-radius:4px;transition:width .5s}
+.pillar{display:grid;grid-template-columns:110px 1fr 44px;gap:12px;align-items:center;font-size:14px;margin:10px 0}
+/* Tables */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--canvas)}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{text-align:left;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--soft);white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tr.click{cursor:pointer}tr.click:hover td{background:var(--soft)}
+.id{font-family:var(--mono);font-size:12.5px;color:var(--muted);white-space:nowrap}
+.mono{font-family:var(--mono);font-size:13px}
+pre.json{margin:0;font-family:var(--mono);font-size:12.5px;line-height:1.5;background:var(--soft);border:1px solid var(--line);border-radius:var(--r);padding:12px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+/* Insight */
+.insight{border-left:3px solid var(--blue);background:var(--blueSoft);padding:12px 14px;border-radius:0 var(--r) var(--r) 0;font-size:14.5px}
+.note{border:1px solid var(--line);background:var(--soft);border-radius:var(--r);padding:12px 14px;font-size:14px;color:var(--muted)}
+/* Empty */
+.empty{text-align:center;padding:48px 24px}
+.empty .h1{font-size:30px}
+.empty p{max-width:560px;margin:8px auto 24px;color:var(--muted)}
+/* Pipeline */
+.pipe{display:flex;flex-direction:column;gap:10px}
+.step{display:grid;grid-template-columns:36px 1fr auto;gap:12px;align-items:start;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;background:var(--canvas);transition:border-color .3s,background .3s}
+.step .dot{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--soft2);color:var(--muted);font-size:13px;font-weight:700}
+.step.run{border-color:var(--blue);background:var(--blueSoft)}
+.step.run .dot{background:var(--blue);color:#fff}
+.step.done .dot{background:var(--green);color:#fff}
+.step b{display:block;font-size:15px}
+.step .o{font-family:var(--mono);font-size:12.5px;color:var(--muted);margin-top:4px;word-break:break-word}
+.drop{border:1.5px dashed #CFCDC9;border-radius:12px;padding:28px;text-align:center;background:var(--soft)}
+.doc{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:var(--r);padding:12px;background:var(--canvas);text-align:left}
+.doc .ic{width:40px;height:48px;border-radius:6px;background:var(--redSoft);color:var(--red);display:grid;place-items:center;font-size:11px;font-weight:700;flex:0 0 40px}
+/* Review */
+.rev{border:1px solid var(--line);border-radius:12px;background:var(--canvas);padding:20px;display:grid;grid-template-columns:1fr 280px;gap:24px}
+.rev+.rev{margin-top:16px}
+.why{font-size:14.5px}
+.conf{display:flex;align-items:center;gap:10px;font-size:14px}
+.conf .bar{flex:1}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.reason{font-size:13.5px;color:var(--muted)}
+/* Heatmap */
+.heat{display:grid;grid-template-columns:28px repeat(5,1fr);grid-template-rows:repeat(5,52px) 24px;gap:4px;font-size:12px}
+.heat .c{border-radius:6px;display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;font-weight:700;font-size:12px}
+.heat .ax{color:var(--muted);display:flex;align-items:center;justify-content:center}
+.pin{background:var(--ink);color:#fff;border-radius:10px;padding:1px 6px;font-size:11.5px}
+/* Chat */
+.chat{display:flex;flex-direction:column;gap:12px;min-height:320px;max-height:460px;overflow:auto;padding:4px}
+.msg{max-width:78%;padding:12px 14px;border-radius:12px;font-size:14.5px}
+.msg.ai{background:var(--soft);border:1px solid var(--line);align-self:flex-start}
+.msg.me{background:var(--blue);color:#fff;align-self:flex-end}
+.cites{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.cites span{font-family:var(--mono);font-size:11.5px;background:var(--canvas);border:1px solid var(--line);padding:2px 6px;border-radius:5px;color:var(--muted)}
+.chatrow{display:flex;gap:8px;margin-top:12px}
+.input{flex:1;min-height:44px;border:1px solid var(--line);border-radius:var(--r);padding:8px 12px;background:var(--canvas)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip{border:1px solid var(--line);background:var(--canvas);border-radius:16px;padding:6px 12px;font-size:13.5px;min-height:36px}
+.chip:hover{background:var(--soft2)}
+/* Audit */
+.tl{display:flex;flex-direction:column}
+.ev{display:grid;grid-template-columns:72px 18px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.ev:last-child{border-bottom:0}
+.ev time{color:var(--muted);font-family:var(--mono);font-size:12.5px;padding-top:2px}
+.ev .d{width:10px;height:10px;border-radius:50%;margin-top:6px;background:var(--blue)}
+.ev .d.h{background:var(--green)}.ev .d.s{background:var(--muted)}
+.ev b{font-weight:600}
+/* Drawer/modal/toast */
+.scrim{position:fixed;inset:0;background:rgba(20,20,20,.28);z-index:20;display:none}
+.scrim.on{display:block}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:min(520px,100%);background:var(--canvas);border-left:1px solid var(--line);z-index:21;transform:translateX(100%);transition:transform .25s,visibility .25s;visibility:hidden;overflow:auto;padding:24px}
+.drawer.on{transform:none;visibility:visible}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(600px,calc(100% - 32px));max-height:calc(100vh - 48px);overflow:auto;background:var(--canvas);border-radius:12px;border:1px solid var(--line);z-index:22;padding:24px;display:none;box-shadow:var(--shadow)}
+.modal.on{display:block}
+.x{float:right;border:0;background:transparent;font-size:22px;line-height:1;width:40px;height:40px;border-radius:6px;color:var(--muted)}
+.x:hover{background:var(--soft2)}
+.toast{position:fixed;left:50%;top:72px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:var(--r);font-size:14px;z-index:30;display:none;max-width:calc(100% - 32px)}
+textarea.input{width:100%;min-height:96px;resize:vertical}
+label.lbl{display:block;font-size:13.5px;font-weight:600;margin:12px 0 6px}
+select.input{width:100%}
+/* Tour */
+.tour{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);width:min(760px,calc(100% - 32px));background:var(--ink);color:#fff;border-radius:12px;padding:14px 16px;z-index:15;display:none;gap:14px;align-items:center;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.tour.on{display:flex}
+.tour .t{flex:1;font-size:14.5px}
+.tour .t small{display:block;color:rgba(255,255,255,.7);font-size:12px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:2px}
+.tour .btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.35)}
+.tour .btn.ghost:hover{background:rgba(255,255,255,.1)}
+.slider{width:100%;accent-color:var(--blue);height:32px}
+.agent{display:flex;flex-direction:column;gap:8px}
+.agent .top{display:flex;align-items:center;gap:10px}
+.agent .av{width:34px;height:34px;border-radius:8px;background:var(--blueSoft);color:var(--blueDark);display:grid;place-items:center;font-weight:700;font-size:13px;flex:0 0 34px}
+.legal{font-size:12.5px;color:var(--muted);margin-top:24px;text-align:center}
+@media (max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.g21,.g12{grid-template-columns:1fr}.rev{grid-template-columns:1fr}}
+@media (max-width:820px){
+  .side{position:fixed;left:0;top:0;z-index:25;transform:translateX(-100%);transition:transform .25s;box-shadow:var(--shadow)}
+  .side{visibility:hidden}.side.on{transform:none;visibility:visible}
+  .menu{display:inline-flex}
+  .topbar{padding:10px 16px}
+  .view{padding:24px 16px 120px}
+  .g3,.g2{grid-template-columns:1fr}
+  .h1{font-size:24px}
+  .hide-s{display:none}
+  .msg{max-width:92%}
+}
+@media (max-width:480px){.g4{grid-template-columns:1fr 1fr}.kpi .v{font-size:26px}.ringwrap{flex-direction:column;align-items:flex-start}}
+body.touring .view{padding-bottom:160px}
+@media print{.app,.scrim,.tour,.toast,.drawer{display:none!important}.modal{position:static;transform:none;border:0;box-shadow:none;width:auto;max-height:none}.modal .btnrow,.modal .x{display:none!important}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" id="side" aria-label="Main navigation">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#2783DE"/><rect x="7" y="8" width="18" height="3.2" rx="1.6" fill="#fff"/><rect x="7" y="14.4" width="18" height="3.2" rx="1.6" fill="#fff" opacity=".75"/><rect x="7" y="20.8" width="11" height="3.2" rx="1.6" fill="#fff" opacity=".5"/></svg>
+      <b>TrustLayer <span>AI</span></b>
+    </div>
+    <div class="ws"><small>Workspace</small><b>JordanPay</b><div class="muted" style="font-size:13px">Payments fintech · Amman, Jordan</div></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sidefoot">Prototype · sample data<br>Fictional company</div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="btn ghost sm menu" id="menuBtn" aria-label="Open navigation"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <div class="crumb"><span class="hide-s">JordanPay / </span><b id="crumb">Dashboard</b></div>
+      <span class="tag blue hide-s">Sample data</span>
+      <div class="sp"></div>
+      <button class="btn ghost sm" onclick="startTour()">▶ Guided demo</button>
+      <button class="btn ghost sm" onclick="resetDemo()">Reset</button>
+    </header>
+    <main class="view" id="view" tabindex="-1"></main>
+  </div>
+</div>
+<div class="scrim" id="scrim" onclick="closeAll()"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Details"></aside>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Dialog"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="tour" id="tour" role="region" aria-label="Guided demo"></div>
+<script>
+/* ---------- Sample data (illustrative, fictional) ---------- */
+const REQS=[
+["REQ-01","Identify and verify customers before onboarding","KYC","High","§4.2 · p.12","C-01","Verify customer identity before account activation","Compliance","FULL"],
+["REQ-02","Verify the beneficial owners of corporate customers","KYB","High","§4.5 · p.14","C-02","Beneficial-ownership check for all business accounts","Compliance","FULL"],
+["REQ-03","Apply risk-based customer due diligence","CDD","High","§5.1 · p.16","C-03","Risk-rate every customer at onboarding","Compliance","FULL"],
+["REQ-04","Escalate high-risk customers for senior approval","KYC","High","§5.6 · p.19","C-04","Documented escalation and senior approval for high-risk customers","Compliance","MISSING"],
+["REQ-05","Apply enhanced due diligence to politically exposed persons","EDD","High","§5.8 · p.20","C-05","EDD checklist for PEPs: source of funds, senior approval, enhanced monitoring","Compliance","MISSING"],
+["REQ-06","Screen customers against sanctions lists","Sanctions","High","§6.1 · p.22","C-06","Automated sanctions screening at onboarding and daily","Compliance","FULL"],
+["REQ-07","Monitor transactions against defined AML scenarios","AML","High","§7.3 · p.24","C-07","Scenario-based transaction monitoring with reviewed alerts","Risk","PARTIAL"],
+["REQ-08","Review and close monitoring alerts within set timelines","AML","Medium","§7.5 · p.25","C-08","Alert review SLA tracked weekly","Risk","FULL"],
+["REQ-09","Report suspicious transactions to the FIU after internal approval","Reporting","High","§8.2 · p.28","C-09","Compliance-officer approval before every suspicious transaction report","Compliance","PARTIAL"],
+["REQ-10","Keep suspicious transaction reports confidential","Reporting","High","§8.4 · p.29","C-10","Restricted access to reporting records","Compliance","FULL"],
+["REQ-11","Retain customer and transaction records for a defined period","Records","Medium","§9.1 · p.31","C-11","Records retention schedule with deletion rules","Operations","PARTIAL"],
+["REQ-12","Make records retrievable for supervisory requests","Records","Medium","§9.3 · p.32","C-12","Indexed record archive with retrieval log","Operations","FULL"],
+["REQ-13","Appoint a compliance officer with direct board access","Governance","High","§3.1 · p.8","C-13","Compliance officer charter and board reporting line","Board","FULL"],
+["REQ-14","Obtain board approval of the AML/CFT policy annually","Governance","Medium","§3.3 · p.9","C-14","Annual policy approval recorded in board minutes","Board","FULL"],
+["REQ-15","Conduct an enterprise-wide ML/TF risk assessment","Risk","High","§3.6 · p.10","C-15","Annual enterprise risk assessment","Risk","FULL"],
+["REQ-16","Train staff on AML/CFT obligations every year","Training","Medium","§10.1 · p.34","C-16","Annual AML training with attendance records","HR","UNKNOWN"],
+["REQ-17","Perform due diligence on outsourced service providers","Third-party","Medium","§11.2 · p.37","C-17","Vendor due diligence renewed every 12 months","Operations","PARTIAL"],
+["REQ-18","Review customer risk ratings periodically","CDD","Medium","§5.10 · p.21","C-18","Risk-rating refresh by customer tier","Compliance","FULL"],
+["REQ-19","Commission an independent audit of the AML/CFT program","Governance","Medium","§3.8 · p.11","C-19","Independent audit every 2 years","Board","FULL"],
+["REQ-20","Assess ML/TF risk before launching new products","Risk","Medium","§3.7 · p.10","C-20","New-product risk assessment sign-off","Risk","FULL"],
+["REQ-21","Protect customer data with access controls","Data","High","§12.1 · p.40","C-21","Role-based access to customer data","IT","FULL"],
+["REQ-22","Log and review privileged system access","Data","Medium","§12.3 · p.41","C-22","Monthly privileged-access review","IT","FULL"],
+["REQ-23","Freeze funds without delay on a confirmed sanctions match","Sanctions","High","§6.4 · p.23","C-23","Immediate freeze procedure with escalation","Compliance","FULL"],
+["REQ-24","Report compliance status to the board quarterly","Governance","Medium","§3.4 · p.9","C-24","Quarterly compliance report to the board","Compliance","FULL"]
+].map(r=>({id:r[0],title:r[1],cat:r[2],pri:r[3],src:r[4],cid:r[5],control:r[6],owner:r[7],cov:r[8]}));
+
+const GAPS=[
+{id:"GAP-001",req:"REQ-04",title:"Missing KYC escalation procedure for high-risk customers",sev:"Critical",cov:"MISSING",conf:.94,w:4,risk:"R1",owner:"Compliance",due:30,
+ why:"No document describes who approves high-risk customers or how they are escalated.",rec:"Document an escalation workflow with senior-management approval and attach approval records."},
+{id:"GAP-002",req:"REQ-05",title:"No enhanced due diligence procedure for politically exposed persons",sev:"Critical",cov:"MISSING",conf:.91,w:4,risk:"R1",owner:"Compliance",due:30,
+ why:"The policy mentions PEPs but defines no extra checks, source-of-funds review or approval.",rec:"Add an EDD checklist for PEPs: source of funds, senior approval and enhanced monitoring."},
+{id:"GAP-003",req:"REQ-07",title:"Transaction monitoring evidence is incomplete",sev:"High",cov:"PARTIAL",conf:.92,w:3,risk:"R3",owner:"Risk",due:14,
+ why:"Monitoring scenarios are documented, but last quarter's alert review records are not attached.",rec:"Upload Q3 alert review logs and link them to control C-07."},
+{id:"GAP-004",req:"REQ-09",title:"Suspicious transaction reporting lacks an approval step",sev:"High",cov:"PARTIAL",conf:.86,w:3,risk:"R2",owner:"Compliance",due:21,
+ why:"The reporting procedure exists but does not show who approves a report before it is filed.",rec:"Add a compliance-officer approval step to the reporting workflow and log each approval."},
+{id:"GAP-005",req:"REQ-11",title:"Record retention period is not defined",sev:"Medium",cov:"PARTIAL",conf:.95,w:2,risk:"R5",owner:"Operations",due:21,
+ why:"Records are stored, but the policy does not state how long they must be kept.",rec:"State the required retention period in the records policy and configure deletion rules."},
+{id:"GAP-006",req:"REQ-17",title:"Vendor due diligence file is out of date",sev:"Medium",cov:"PARTIAL",conf:.93,w:2,risk:"R4",owner:"Operations",due:21,
+ why:"The KYC vendor's due diligence review is older than the 12-month review cycle.",rec:"Renew the vendor due diligence review and attach the signed assessment."},
+{id:"GAP-007",req:"REQ-16",title:"Staff AML training records were not found",sev:"Medium",cov:"UNKNOWN",conf:.62,w:2,risk:"R6",owner:"HR",due:30,
+ why:"No training records were uploaded, so the agent cannot determine coverage.",rec:"Upload the 2026 training attendance log, or schedule this year's training."}
+];
+const RISKS=[
+{id:"R1",name:"KYC / due diligence failure",L:4,I:5},
+{id:"R2",name:"Suspicious activity reporting failure",L:3,I:5},
+{id:"R3",name:"Transaction monitoring blind spot",L:3,I:4},
+{id:"R6",name:"Low staff AML awareness",L:3,I:3},
+{id:"R4",name:"Third-party (vendor) failure",L:2,I:4},
+{id:"R5",name:"Record retention breach",L:2,I:3}
+];
+const EVID={"C-01":["KYC Procedure.pdf","Verification Log.xlsx"],"C-03":["Customer Risk Model.xlsx"],"C-06":["Screening Config.pdf","Screening Log.csv"],"C-07":["Monitoring Scenarios.pdf"],"C-09":["STR Procedure.docx"],"C-11":["Records Policy.docx"],"C-13":["Compliance Charter.pdf"],"C-17":["Vendor DD 2025.pdf"],"C-24":["Q2 Board Report.pdf"]};
+const BASE=68;
+/* ---------- Helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const RM=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const now=()=>{const d=new Date();return d.toTimeString().slice(0,5)};
+const reqById=id=>REQS.find(r=>r.id===id);
+const gapById=id=>S.gaps.find(g=>g.id===id);
+const gapForReq=rid=>S.gaps.find(g=>g.req===rid);
+const fmt=n=>n.toFixed(2);
+const ICON={
+dashboard:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+executive:'<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>',
+intake:'<path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M4 20h16"/>',
+agents:'<circle cx="12" cy="12" r="3"/><circle cx="5" cy="5" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M6.5 6.5l3.3 3.3M17.5 6.5l-3.3 3.3M6.5 17.5l3.3-3.3M17.5 17.5l-3.3-3.3"/>',
+requirements:'<path d="M9 6h12M9 12h12M9 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01"/>',
+controls:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+risks:'<path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17h.01"/>',
+gaps:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
+review:'<circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6"/><path d="M15 17l2 2 4-4"/>',
+actions:'<path d="M4 12h15"/><path d="M13 6l6 6-6 6"/>',
+evidence:'<path d="M14 3H6a1 1 0 00-1 1v16a1 1 0 001 1h12a1 1 0 001-1V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>',
+copilot:'<path d="M4 5h16v11H9l-5 4z"/><path d="M9 10.5h.01M12 10.5h.01M15 10.5h.01"/>'
+};
+const NAV=[["Overview",[["dashboard","Dashboard"],["executive","Executive View"]]],
+["Compliance",[["intake","Regulatory Intake"],["requirements","Requirements"],["controls","Controls"],["risks","Risk Register"],["gaps","Gap Analysis"]]],
+["Decisions",[["review","Human Review"],["actions","Action Center"],["evidence","Evidence & Audit"]]],
+["Intelligence",[["agents","Agents & Rules"],["copilot","Ask TrustLayer"]]]];
+const TITLES=Object.fromEntries(NAV.flatMap(s=>s[1]));
+
+/* ---------- State ---------- */
+let S;
+function init(){S={analyzed:false,running:false,threshold:.90,screen:"dashboard",gaps:GAPS.map(g=>({...g,status:"new",decidedBy:null,evReq:false})),
+actions:[],seq:0,ctrl:{},ctrlText:{},evid:JSON.parse(JSON.stringify(EVID)),audit:[],chat:[],tour:-1,doc:"JordanPay_AML-CFT_KYC_Instructions_sample.pdf",reqFilter:"all",ctrlFilter:"decide",analysisAt:null}}
+init();
+
+/* ---------- Scoring ---------- */
+const doneW=()=>S.gaps.filter(g=>g.status==="done").reduce((a,g)=>a+g.w,0);
+const maxW=()=>S.gaps.reduce((a,g)=>a+g.w,0);
+const score=()=>BASE+doneW();
+function pillars(){const p=doneW()/maxW();return [["Compliance",72,18],["Risk",64,22],["Governance",70,16],["Controls",66,20]].map(([n,b,a])=>[n,Math.round(b+a*p)])}
+function covOf(r){const g=gapForReq(r.id);if(g&&g.status==="done")return "FULL";return r.cov}
+function residualL(rk){const linked=S.gaps.filter(g=>g.risk===rk.id);const d=linked.filter(g=>g.status==="done").length;return Math.max(1,rk.L-(linked.length?Math.ceil(2*d/linked.length):0))}
+const lvl=s=>s>=16?["Critical","red"]:s>=10?["High","orange"]:s>=5?["Medium","gray"]:["Low","green"];
+const sevTag=s=>`<span class="tag ${s==="Critical"?"red":s==="High"?"orange":"gray"}">${s}</span>`;
+const covTag=c=>`<span class="tag ${c==="FULL"?"green":c==="PARTIAL"?"orange":c==="MISSING"?"red":"gray"}">${c}</span>`;
+const pending=()=>S.gaps.filter(g=>g.status==="review");
+const openActs=()=>S.actions.filter(a=>a.status!=="Done");
+
+/* ---------- Audit ---------- */
+function log(kind,actor,event,detail){S.audit.unshift({t:now(),kind,actor,event,detail:detail||""})}
+
+/* ---------- Routing ---------- */
+const routeFor=g=>(g.sev!=="Critical"&&g.conf>=S.threshold)?"auto":"human";
+function routeReason(g){if(g.sev==="Critical")return "Critical severity: a human must always decide.";if(g.conf<S.threshold)return `Confidence ${fmt(g.conf)} is below the ${fmt(S.threshold)} threshold.`;return `Confidence ${fmt(g.conf)} ≥ ${fmt(S.threshold)} and severity is ${g.sev}.`}
+function createAction(g,origin){S.seq++;S.actions.unshift({id:"ACT-"+String(S.seq).padStart(3,"0"),gap:g.id,title:g.rec,owner:g.owner,due:g.due,status:"Open",origin})}
+function applyRouting(){S.gaps.forEach(g=>{if(g.decidedBy||g.status==="done")return;const r=routeFor(g);
+ if(r==="auto"&&g.status!=="action"){g.status="action";createAction(g,"auto");log("agent","Remediation Agent",`Auto-created action for ${g.id}`,routeReason(g))}
+ else if(r==="human"&&g.status!=="review"){if(g.status==="action"){const a=S.actions.find(a=>a.gap===g.id&&a.origin==="auto");if(a&&a.status!=="Open")return;S.actions=S.actions.filter(x=>x!==a)}
+  g.status="review";log("agent","Orchestrator",`Routed ${g.id} to human review`,routeReason(g))}})}
+
+/* ---------- Navigation ---------- */
+function renderNav(){const rc=pending().length,ac=openActs().length;
+$("#nav").innerHTML=NAV.map(([sec,items])=>`<div class="navsec">${sec}</div>`+items.map(([k,l])=>`<button class="${S.screen===k?"on":""}" onclick="go('${k}')" ${S.screen===k?'aria-current="page"':""}><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>${l}${k==="review"&&rc?`<span class="count" aria-label="${rc} waiting">${rc}</span>`:""}${k==="actions"&&ac?`<span class="count" style="background:var(--blueSoft);color:var(--blueDark)" aria-label="${ac} open">${ac}</span>`:""}</button>`).join("")).join("")}
+function go(k){S.screen=k;$("#side").classList.remove("on");render();window.scrollTo(0,0);$("#view").focus({preventScroll:true})}
+function render(){renderNav();$("#crumb").textContent=TITLES[S.screen];$("#view").innerHTML=(V[S.screen]||V.dashboard)()+legal();renderTour()}
+const legal=()=>`<p class="legal">Prototype with sample data for a fictional company. TrustLayer AI provides decision support. It does not make legal determinations of compliance; qualified people make the final decisions.</p>`;
+function needAnalysis(title,sub){return `<div class="head"><div><h1 class="h1">${title}</h1><p class="sub">${sub}</p></div></div><div class="card empty"><h2 class="h1" style="font-size:22px">No analysis yet</h2><p>Upload a regulation and run the agents to fill this view.</p><button class="btn" onclick="go('intake')">Go to Regulatory Intake</button></div>`}
+const chain=(on)=>`<div class="chain" aria-label="TrustLayer decision chain">${["REGULATION","REQUIREMENTS","CONTROLS","RISKS","GAPS","ACTIONS","EVIDENCE","TRUST SCORE"].map((x,i)=>`<span class="${on?"on":""}">${x}</span>${i<7?"<i>→</i>":""}`).join("")}</div>`;
+const ring=(v,label)=>`<div class="ring" style="--p:${v}" role="img" aria-label="Trust Score ${v} out of 100"><div><div><b>${v}</b><small>${label||"/ 100"}</small></div></div></div>`;
+
+/* ---------- Views ---------- */
+const V={};
+V.dashboard=()=>{
+ if(!S.analyzed)return `<div class="card empty">
+  <svg width="48" height="48" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#2783DE"/><rect x="7" y="8" width="18" height="3.2" rx="1.6" fill="#fff"/><rect x="7" y="14.4" width="18" height="3.2" rx="1.6" fill="#fff" opacity=".75"/><rect x="7" y="20.8" width="11" height="3.2" rx="1.6" fill="#fff" opacity=".5"/></svg>
+  <h1 class="h1 mt">Turn regulation into action</h1>
+  <p>JordanPay just received new AML/CFT and KYC instructions. Upload them, and TrustLayer's agents will map every requirement to a control, find the gaps and recommend what to fix first. People approve the decisions that matter.</p>
+  <div class="btnrow" style="justify-content:center"><button class="btn" onclick="go('intake')">Analyze a regulation</button><button class="btn ghost" onclick="startTour()">▶ Start guided demo</button></div>
+  <div class="mt3" style="display:flex;justify-content:center">${chain(false)}</div></div>
+  <div class="grid g3 mt2">
+  <div class="card"><span class="tag blue">1</span><h3 class="mt">Upload</h3><p class="muted small" style="margin:0">A regulation, policy or supervisory circular (PDF, DOCX or text).</p></div>
+  <div class="card"><span class="tag blue">2</span><h3 class="mt">Agents decide</h3><p class="muted small" style="margin:0">Six specialized agents return typed decisions, each with a confidence score and a source.</p></div>
+  <div class="card"><span class="tag blue">3</span><h3 class="mt">Humans approve</h3><p class="muted small" style="margin:0">Critical or uncertain decisions go to a compliance professional. Everything is logged.</p></div></div>`;
+ const sc=score(),d=sc-BASE,p=pending(),og=S.gaps.filter(g=>g.status!=="done"),crit=og.filter(g=>g.sev==="Critical").length,top=[...og].sort((a,b)=>b.w-a.w||b.conf-a.conf)[0];
+ return `<div class="head"><div><h1 class="h1">GRC Command Center</h1><p class="sub">JordanPay · Last analysis today at ${S.analysisAt} · ${esc(S.doc)}</p></div><button class="btn ghost" onclick="go('executive')">Executive View</button></div>
+ <div class="grid g21">
+  <div class="card"><h3>Trust Score</h3><div class="ringwrap">${ring(sc)}<div style="flex:1;min-width:0">
+   <div class="small"><b>${d>0?"+"+d+" since first analysis":"Baseline from first analysis"}</b></div><div class="muted small">Rises as gaps are resolved and verified.</div>
+   ${pillars().map(([n,v])=>`<div class="pillar"><span>${n}</span><div class="bar"><i style="width:${v}%"></i></div><b>${v}%</b></div>`).join("")}</div></div></div>
+  <div class="card"><h3>Needs your attention</h3>
+   <div class="kpi"><small>Decisions awaiting human review</small><div class="v">${p.length}</div></div>
+   <button class="btn mt" style="width:100%" onclick="go('review')" ${p.length?"":"disabled"}>${p.length?"Open review queue":"Queue is clear"}</button>
+   ${top?`<div class="insight mt"><b>Fix first:</b> ${esc(top.title)}. <span class="muted">(${top.id}, ${top.sev})</span></div>`:`<div class="insight mt"><b>All identified gaps are resolved.</b></div>`}</div>
+ </div>
+ <div class="grid g4 mt">
+  <div class="card kpi"><small>Requirements</small><div class="v">24</div><div class="n">Each traced to page and section</div></div>
+  <div class="card kpi"><small>Open gaps</small><div class="v">${og.length}</div><div class="n">${crit} critical</div></div>
+  <div class="card kpi"><small>Open actions</small><div class="v">${openActs().length}</div><div class="n">${S.actions.filter(a=>a.status==="Done").length} completed</div></div>
+  <div class="card kpi"><small>Automation threshold</small><div class="v">${fmt(S.threshold)}</div><div class="n">Confidence needed to auto-act</div></div>
+ </div>
+ <div class="grid g2 mt">
+  <div class="card"><h3>Agent and human activity</h3><div class="tl">${S.audit.slice(0,6).map(evRow).join("")}</div><button class="btn ghost sm mt" onclick="go('evidence')">Full audit trail</button></div>
+  <div class="card"><h3>How every decision flows</h3>${chain(true)}
+   <pre class="json mt">IF severity != "Critical" AND confidence >= ${fmt(S.threshold)}
+   → agent creates the action automatically
+ELSE
+   → a compliance professional decides</pre>
+   <button class="btn ghost sm mt" onclick="go('agents')">Adjust rules</button></div>
+ </div>`};
+
+const evRow=e=>`<div class="ev"><time>${e.t}</time><span class="d ${e.kind==="human"?"h":e.kind==="system"?"s":""}" aria-hidden="true"></span><div><b>${esc(e.actor)}</b> · ${esc(e.event)}${e.detail?`<div class="muted" style="font-size:13px">${esc(e.detail)}</div>`:""}</div></div>`;
+
+const STEPS=[
+["Orchestrator","Plans the review and assigns agents",()=>`plan = [extract, map, assess, detect, remediate, verify] · threshold = ${fmt(S.threshold)}`],
+["Regulation Agent","Reads the document and extracts obligations",()=>`{"requirements": 24, "categories": 11, "traceability": "page + section"}`],
+["Control Mapping Agent","Maps each requirement to a control",()=>`{"mapped_to_existing": 17, "proposed_new": 7}`],
+["Risk Agent","Scores likelihood × impact",()=>`{"risks": 6, "critical": 1, "high": 3}`],
+["Gap Detection Agent","Checks whether evidence covers each control",()=>`{"FULL": 17, "PARTIAL": 4, "MISSING": 2, "UNKNOWN": 1}`],
+["Remediation Agent","Recommends actions and routes each decision",()=>{const a=S.gaps.filter(g=>routeFor(g)==="auto").length;return `{"auto_actions": ${a}, "human_review": ${7-a}}`}],
+["Evidence Agent","Verifies supporting documents",()=>`{"evidence_files": 13, "controls_missing_evidence": 3}`]];
+V.intake=()=>{const st=S.analyzed?7:(S.stepIdx||0);
+ return `<div class="head"><div><h1 class="h1">Regulatory Intake</h1><p class="sub">Add a regulation, policy or supervisory document. TrustLayer's agents do the first pass in minutes. People approve what matters.</p></div></div>
+ <div class="grid g12">
+  <div class="card"><h3>1. Choose a document</h3>
+   <div class="drop"><div class="doc"><div class="ic">PDF</div><div style="min-width:0"><b style="word-break:break-all">${esc(S.doc)}</b><div class="muted small">Sample regulatory pack · 42 pages · illustrative text</div></div></div>
+   <p class="muted small" style="margin:16px 0 8px">Or choose your own file (the prototype still runs on sample data):</p>
+   <label class="btn ghost sm" for="file" style="cursor:pointer">Choose file</label><input id="file" type="file" accept=".pdf,.doc,.docx,.txt" style="position:absolute;opacity:0;width:1px;height:1px" onchange="pickFile(this)" ${S.busy||S.analyzed?"disabled":""}></div>
+   <h3 class="mt2">2. Run the agents</h3>
+   <button class="btn" style="width:100%" onclick="runAnalysis()" ${S.busy||S.analyzed?"disabled":""}>${S.analyzed?"✓ Analysis complete":S.busy?"Agents working…":"Analyze with TrustLayer AI"}</button>
+   ${S.analyzed?`<div class="insight mt"><b>24 requirements · 7 gaps · Trust Score ${BASE}.</b><br>${pending().length} decisions need a human. ${S.actions.filter(a=>a.origin==="auto").length} actions were created automatically.</div><div class="btnrow mt"><button class="btn" onclick="go('review')">Open review queue</button><button class="btn ghost" onclick="go('requirements')">See requirements</button></div>`:`<p class="muted small mt">Use <b>Reset</b> at the top to run the demo again.</p>`}
+  </div>
+  <div class="card"><h3>Agent pipeline</h3><div class="pipe">${STEPS.map((s,i)=>{const c=i<st?"done":(S.busy&&i===st)?"run":"";return `<div class="step ${c}"><span class="dot">${i<st?"✓":i+1}</span><div><b>${s[0]}</b><span class="muted small">${s[1]}</span>${i<st?`<div class="o">${esc(s[2]())}</div>`:""}</div><span class="tag ${i<st?"green":c?"blue":"gray"}">${i<st?"Done":c?"Running":"Waiting"}</span></div>`}).join("")}</div></div>
+ </div>`};
+function pickFile(el){if(el.files&&el.files[0]){S.doc=el.files[0].name;render();toast("File selected. The prototype will analyze it using sample results.")}}
+function runAnalysis(){if(S.busy||S.analyzed)return;S.busy=true;S.stepIdx=0;log("human","Huda A. (Compliance Lead)","Uploaded document",S.doc);
+ const tick=()=>{S.stepIdx++;const s=STEPS[S.stepIdx-1];log("agent",s[0],s[1],s[2]());
+  if(S.stepIdx>=STEPS.length){S.analyzed=true;S.busy=false;S.analysisAt=now();applyRouting();log("system","TrustLayer","Trust Score calculated",`Baseline ${BASE} / 100`);render();toast("Analysis complete: 24 requirements, 7 gaps.");if(S.tour===1)renderTour();return}
+  render();setTimeout(tick,RM?60:650)};
+ render();setTimeout(tick,RM?60:500)}
+
+V.agents=()=>{const counts={auto:S.gaps.filter(g=>!g.decidedBy&&g.status!=="done"&&routeFor(g)==="auto").length,human:S.gaps.filter(g=>!g.decidedBy&&g.status!=="done"&&routeFor(g)==="human").length};
+ const A=[["RA","Regulation Agent","Extracts and classifies obligations, with source page and section.",`{ "id": "REQ-04",\n  "category": "KYC",\n  "priority": "High",\n  "source": "§5.6 · p.19" }`],
+ ["CM","Control Mapping Agent","Maps each requirement to a control, owner and evidence.",`{ "control": "C-04",\n  "owner": "Compliance",\n  "evidence": ["SOP", "approvals"] }`],
+ ["RK","Risk Agent","Scores likelihood × impact and explains why.",`{ "risk": "R1",\n  "likelihood": 4, "impact": 5,\n  "level": "Critical" }`],
+ ["GD","Gap Detection Agent","Decides whether evidence covers a control.",`{ "coverage": "MISSING",\n  "enum": ["FULL","PARTIAL",\n    "MISSING","UNKNOWN"],\n  "confidence": 0.94 }`],
+ ["RM","Remediation Agent","Recommends the next action and routes it.",`{ "action": "Document escalation",\n  "owner": "Compliance",\n  "route": "human_review" }`],
+ ["EV","Evidence Agent","Checks whether a document supports a control.",`{ "relevance": "RELEVANT",\n  "supports_control": true,\n  "confidence": 0.91 }`]];
+ return `<div class="head"><div><h1 class="h1">Agents & Rules</h1><p class="sub">Each agent returns a typed decision with a confidence score, not free text. The orchestrator decides what the software can do on its own and what needs a person.</p></div></div>
+ <div class="grid g21"><div class="card"><h3>Automation threshold</h3>
+  <label for="thr" class="small">Agents may act on their own only above this confidence: <b id="thrv">${fmt(S.threshold)}</b></label>
+  <input id="thr" class="slider" type="range" min="0.70" max="0.99" step="0.01" value="${S.threshold}" oninput="$('#thrv').textContent=(+this.value).toFixed(2)" onchange="setThr(this.value)">
+  <div class="muted small" style="display:flex;justify-content:space-between"><span>0.70 · more automation</span><span>0.99 · more human review</span></div>
+  <pre class="json mt">IF severity == "Critical"    → human review (always)
+IF confidence &lt; ${fmt(S.threshold)}         → human review
+OTHERWISE                    → agent creates the action
+EVERY decision               → written to the audit trail</pre></div>
+ <div class="card"><h3>Undecided items right now</h3><div class="grid g2"><div class="kpi"><small>Auto-act</small><div class="v">${S.analyzed?counts.auto:"—"}</div></div><div class="kpi"><small>Human review</small><div class="v">${S.analyzed?counts.human:"—"}</div></div></div>
+ <p class="muted small mt" style="margin-bottom:0">Move the slider and watch decisions re-route. Actions already started stay where they are.</p></div></div>
+ <div class="grid g3 mt">${A.map(a=>`<div class="card agent"><div class="top"><span class="av">${a[0]}</span><b>${a[1]}</b></div><div class="muted small">${a[2]}</div><pre class="json">${a[3]}</pre></div>`).join("")}</div>
+ <div class="note mt">The architecture is model-agnostic. Agents are defined by their output schemas, so the underlying AI model can change without changing the product.</div>`};
+function setThr(v){S.threshold=+(+v).toFixed(2);log("human","Huda A. (Compliance Lead)","Changed automation threshold",`New threshold ${fmt(S.threshold)}`);if(S.analyzed)applyRouting();render();toast(`Threshold set to ${fmt(S.threshold)}. Decisions re-routed.`)}
+
+V.requirements=()=>{if(!S.analyzed)return needAnalysis("Regulatory Requirements","Obligations extracted by the Regulation Agent, each traced to its source.");
+ const rows=REQS.filter(r=>S.reqFilter==="all"||covOf(r)!=="FULL");
+ return `<div class="head"><div><h1 class="h1">Regulatory Requirements</h1><p class="sub">24 obligations extracted from ${esc(S.doc)}. Every one links back to its page and section, so a reviewer can check the AI's reading. Select a row for details.</p></div></div>
+ <div class="btnrow" style="margin-bottom:12px" role="group" aria-label="Filter"><button class="btn sm ${S.reqFilter==="all"?"":"ghost"}" onclick="S.reqFilter='all';render()">All (24)</button><button class="btn sm ${S.reqFilter==="gaps"?"":"ghost"}" onclick="S.reqFilter='gaps';render()">Not fully covered (${REQS.filter(r=>covOf(r)!=="FULL").length})</button></div>
+ <div class="tw"><table><thead><tr><th>ID</th><th>Requirement</th><th>Category</th><th>Priority</th><th>Source</th><th>Coverage</th></tr></thead><tbody>
+ ${rows.map(r=>`<tr class="click" tabindex="0" onclick="openReq('${r.id}')" onkeydown="if(event.key==='Enter')openReq('${r.id}')"><td class="id">${r.id}</td><td>${esc(r.title)}</td><td>${r.cat}</td><td><span class="tag ${r.pri==="High"?"orange":"gray"}">${r.pri}</span></td><td class="mono">${r.src}</td><td>${covTag(covOf(r))}</td></tr>`).join("")}
+ </tbody></table></div>`};
+function openReq(id){const r=reqById(id),g=gapForReq(id),c=covOf(r);
+ openDrawer(`<button class="x" onclick="closeAll()" aria-label="Close">×</button><div class="id">${r.id} · ${r.cat}</div><h2 style="margin:6px 0 12px;font-size:21px;line-height:1.3">${esc(r.title)}</h2>
+ <div class="btnrow"><span class="tag ${r.pri==="High"?"orange":"gray"}">${r.pri} priority</span>${covTag(c)}</div>
+ <h3 class="mt2" style="font-size:15px">Source (${r.src})</h3><div class="insight" style="font-style:italic">“The licensee shall ${esc(r.title.charAt(0).toLowerCase()+r.title.slice(1))}.”</div><p class="muted" style="font-size:13px">Illustrative excerpt from the sample document.</p>
+ <h3 class="mt2" style="font-size:15px">Regulation Agent output</h3><pre class="json">{ "id": "${r.id}",
+  "obligation": "${esc(r.title)}",
+  "category": "${r.cat}",
+  "priority": "${r.pri}",
+  "source": "${r.src}",
+  "confidence": ${g?fmt(Math.min(.99,g.conf+.03)):"0.97"} }</pre>
+ <h3 class="mt2" style="font-size:15px">Mapped control</h3><p style="margin:0"><span class="id">${r.cid}</span> ${esc(S.ctrlText[r.cid]||r.control)} <span class="muted">· Owner: ${r.owner}</span></p>
+ ${g?`<h3 class="mt2" style="font-size:15px">Linked gap</h3><p style="margin:0 0 12px">${sevTag(g.sev)} <b>${g.id}</b> ${esc(g.title)}</p><button class="btn" onclick="closeAll();go('${g.status==="review"?"review":g.status==="done"?"gaps":"actions"}')">${g.status==="review"?"Review decision":g.status==="done"?"View in Gap Analysis":"View action"}</button>`:""}`)}
+
+V.controls=()=>{if(!S.analyzed)return needAnalysis("Controls","Controls mapped to each requirement by the Control Mapping Agent.");
+ const prop=REQS.filter(r=>r.cov!=="FULL"),dec=prop.filter(r=>!S.ctrl[r.cid]).length;
+ const rows=REQS.filter(r=>S.ctrlFilter==="all"||r.cov!=="FULL");
+ return `<div class="head"><div><h1 class="h1">Controls</h1><p class="sub">The Control Mapping Agent matched 17 requirements to existing controls and proposed 7 new or stronger ones. You accept, edit or reject each proposal.</p></div><span class="tag ${dec?"orange":"green"}">${dec?dec+" proposals need a decision":"All proposals decided"}</span></div>
+ <div class="btnrow" style="margin-bottom:12px" role="group" aria-label="Filter"><button class="btn sm ${S.ctrlFilter==="decide"?"":"ghost"}" onclick="S.ctrlFilter='decide';render()">AI proposals (7)</button><button class="btn sm ${S.ctrlFilter==="all"?"":"ghost"}" onclick="S.ctrlFilter='all';render()">All controls (24)</button></div>
+ <div class="tw"><table><thead><tr><th>Control</th><th>Description</th><th>Requirement</th><th>Owner</th><th>Decision</th></tr></thead><tbody>
+ ${rows.map(r=>{const d=S.ctrl[r.cid];const isP=r.cov!=="FULL";return `<tr><td class="id">${r.cid}</td><td>${esc(S.ctrlText[r.cid]||r.control)}${S.ctrlText[r.cid]?' <span class="tag gray">Edited</span>':""}</td><td class="id">${r.id}</td><td>${r.owner}</td><td>${!isP?'<span class="tag green">Existing · mapped</span>':d==="accepted"?'<span class="tag green">✓ Accepted</span>':d==="rejected"?'<span class="tag red">Rejected</span>':`<div class="btnrow"><button class="btn sm" onclick="ctrlDo('${r.cid}','accepted')">Accept</button><button class="btn sm ghost" onclick="ctrlEdit('${r.cid}')">Edit</button><button class="btn sm ghost" onclick="ctrlDo('${r.cid}','rejected')">Reject</button></div>`}</td></tr>`}).join("")}
+ </tbody></table></div><p class="muted small mt">TrustLayer proposes controls. Qualified users keep approval responsibility.</p>`};
+function ctrlDo(cid,d){S.ctrl[cid]=d;log("human","Huda A. (Compliance Lead)",`${d==="accepted"?"Accepted":"Rejected"} control ${cid}`,"Control Mapping Agent proposal");render();toast(`Control ${cid} ${d}.`)}
+function ctrlEdit(cid){const r=REQS.find(x=>x.cid===cid);openModal(`<button class="x" onclick="closeAll()" aria-label="Close">×</button><h2 style="margin:0 0 4px;font-size:20px">Edit control ${cid}</h2><p class="muted small" style="margin:0">For ${r.id}: ${esc(r.title)}</p>
+ <label class="lbl" for="ct">Control description</label><textarea id="ct" class="input">${esc(S.ctrlText[cid]||r.control)}</textarea>
+ <div class="btnrow mt"><button class="btn" onclick="saveCtrl('${cid}')">Save and accept</button><button class="btn ghost" onclick="closeAll()">Cancel</button></div>`);setTimeout(()=>$("#ct").focus(),50)}
+function saveCtrl(cid){const v=$("#ct").value.trim();if(!v)return;S.ctrlText[cid]=v;S.ctrl[cid]="accepted";log("human","Huda A. (Compliance Lead)",`Edited and accepted control ${cid}`,v);closeAll();render();toast("Control updated and accepted.")}
+
+V.risks=()=>{if(!S.analyzed)return needAnalysis("Risk Register","Likelihood × impact, scored and explained by the Risk Agent.");
+ const R=RISKS.map(r=>{const L=residualL(r);return {...r,Lr:L,s:L*r.I}});
+ let cells="";for(let i=5;i>=1;i--){cells+=`<div class="ax">${i}</div>`;for(let l=1;l<=5;l++){const v=l*i,c=v>=16?"var(--redSoft)":v>=10?"var(--orangeSoft)":v>=5?"var(--soft2)":"var(--greenSoft)";const pins=R.filter(r=>r.Lr===l&&r.I===i).map(r=>`<span class="pin">${r.id}</span>`).join("");cells+=`<div class="c" style="background:${c}">${pins}</div>`}}
+ cells+=`<div></div>`+[1,2,3,4,5].map(n=>`<div class="ax">${n}</div>`).join("");
+ return `<div class="head"><div><h1 class="h1">Risk Register</h1><p class="sub">The Risk Agent scores each risk from the requirements, controls and gaps it found. Resolve the linked gaps and the residual likelihood drops.</p></div></div>
+ <div class="grid g12"><div class="card"><h3>Heat map</h3><div class="heat" role="img" aria-label="Risk heat map: impact on the vertical axis, likelihood on the horizontal axis">${cells}</div><div class="muted small" style="display:flex;justify-content:space-between;margin-top:6px"><span>↑ Impact</span><span>Likelihood →</span></div></div>
+ <div class="tw"><table><thead><tr><th>Risk</th><th>L × I</th><th>Score</th><th>Level</th><th>Linked gaps</th></tr></thead><tbody>
+ ${R.sort((a,b)=>b.s-a.s).map(r=>{const[l,c]=lvl(r.s);const lg=S.gaps.filter(g=>g.risk===r.id);return `<tr><td><span class="id">${r.id}</span> <b>${esc(r.name)}</b></td><td class="mono">${r.Lr} × ${r.I}${r.Lr<r.L?` <span class="tag green">↓ from ${r.L}</span>`:""}</td><td><b>${r.s}</b></td><td><span class="tag ${c}">${l}</span></td><td>${lg.map(g=>`<span class="id">${g.id}</span>${g.status==="done"?" ✓":""}`).join("<br>")}</td></tr>`}).join("")}
+ </tbody></table></div></div>
+ <div class="insight mt"><b>Risk Agent:</b> ${(()=>{const t=R[0];return t.s>=16?`${esc(t.name)} is critical because two high-priority KYC requirements (REQ-04, REQ-05) have no documented control evidence.`:`No critical risks remain. The highest residual risk is ${esc(t.name)} (score ${t.s}).`})()}</div>`};
+
+const statusTag=g=>g.status==="review"?'<span class="tag orange">Awaiting human</span>':g.status==="action"?`<span class="tag blue">Action ${S.actions.find(a=>a.gap===g.id)?.status==="In progress"?"in progress":"open"}</span>`:g.status==="done"?'<span class="tag green">✓ Resolved</span>':'<span class="tag gray">New</span>';
+V.gaps=()=>{if(!S.analyzed)return needAnalysis("Gap Analysis","Where evidence does not fully cover a requirement.");
+ return `<div class="head"><div><h1 class="h1">Gap Analysis</h1><p class="sub">The Gap Detection Agent gives every control a coverage decision (FULL, PARTIAL, MISSING or UNKNOWN) and a confidence score. Here are the 7 controls that are not fully covered.</p></div></div>
+ <div class="tw"><table><thead><tr><th>Gap</th><th>Severity</th><th>Coverage</th><th>Confidence</th><th>Why it matters</th><th>Status</th><th></th></tr></thead><tbody>
+ ${S.gaps.map(g=>`<tr><td><span class="id">${g.id} · ${g.req}</span><br><b>${esc(g.title)}</b></td><td>${sevTag(g.sev)}</td><td>${covTag(g.cov)}</td><td class="mono">${fmt(g.conf)}</td><td class="small">${esc(g.why)}</td><td>${statusTag(g)}</td><td>${g.status==="review"?`<button class="btn sm" onclick="go('review')">Review</button>`:g.status==="action"?`<button class="btn sm ghost" onclick="go('actions')">View action</button>`:""}</td></tr>`).join("")}
+ </tbody></table></div>`};
+
+V.review=()=>{if(!S.analyzed)return needAnalysis("Human Review","Decisions the agents are not allowed to make alone.");
+ const p=pending(),dec=S.gaps.filter(g=>g.decidedBy==="human");
+ return `<div class="head"><div><h1 class="h1">Human Review</h1><p class="sub">Critical findings and low-confidence decisions come here. A compliance professional approves the recommendation, marks the control as covered, or asks for more evidence. Every choice is logged.</p></div><span class="tag ${p.length?"orange":"green"}">${p.length?p.length+" waiting":"Queue clear"}</span></div>
+ ${p.length?p.map(g=>{const r=reqById(g.req);return `<article class="rev" aria-label="${g.id}"><div>
+  <div class="btnrow" style="align-items:center">${sevTag(g.sev)}<span class="id">${g.id} · ${g.req} · ${r.src}</span></div>
+  <h2 style="margin:8px 0 12px;font-size:19px;line-height:1.3">${esc(g.title)}</h2>
+  <p class="why" style="margin:0 0 8px"><b>Why it matters:</b> ${esc(g.why)}</p>
+  <div class="insight"><b>AI recommendation:</b> ${esc(g.rec)} <span class="muted">Owner: ${g.owner} · ${g.due} days</span></div>
+  <p class="reason mt"><b>Why a human is needed:</b> ${routeReason(g)}</p>
+  ${g.evReq?'<p class="reason"><span class="tag blue">Evidence requested</span> The owner has been asked for more documents.</p>':""}
+  <div class="btnrow mt"><button class="btn" onclick="approve('${g.id}')">Approve recommendation</button><button class="btn ghost" onclick="coverModal('${g.id}')">Mark as covered</button><button class="btn ghost" onclick="reqEv('${g.id}')" ${g.evReq?"disabled":""}>Request evidence</button></div></div>
+  <div><div class="small" style="font-weight:600;margin-bottom:6px">Gap Detection Agent decision</div><pre class="json">{ "control": "${r.cid}",
+  "coverage": "${g.cov}",
+  "severity": "${g.sev}",
+  "confidence": ${fmt(g.conf)} }</pre>
+  <div class="conf mt"><span>Confidence</span><div class="bar"><i style="width:${g.conf*100}%;background:${g.conf>=S.threshold?"var(--blue)":"var(--orange)"}"></i></div><b>${Math.round(g.conf*100)}%</b></div>
+  <div class="muted" style="font-size:13px;margin-top:4px">Threshold ${Math.round(S.threshold*100)}%</div></div></article>`}).join(""):`<div class="card empty"><h2 class="h1" style="font-size:22px">All clear</h2><p>No decisions are waiting for a human. Approved items are now in the Action Center.</p><button class="btn" onclick="go('actions')">Go to Action Center</button></div>`}
+ ${dec.length?`<div class="card mt2"><h3>Decided by a human</h3>${dec.map(g=>`<div class="ev" style="grid-template-columns:90px 1fr"><span class="id">${g.id}</span><div>${esc(g.title)} · <span class="muted">${g.resolution||"Recommendation approved"}</span></div></div>`).join("")}</div>`:""}`};
+function approve(id){const g=gapById(id);g.decidedBy="human";g.status="action";g.resolution="Recommendation approved";createAction(g,"human");log("human","Huda A. (Compliance Lead)",`Approved recommendation for ${id}`,"Action created in the Action Center");render();toast(`Approved. Action created for ${id}.`)}
+function reqEv(id){const g=gapById(id);g.evReq=true;log("human","Huda A. (Compliance Lead)",`Requested evidence for ${id}`,`Owner: ${g.owner}`);render();toast(`Evidence requested from ${g.owner}.`)}
+function coverModal(id){const g=gapById(id);openModal(`<button class="x" onclick="closeAll()" aria-label="Close">×</button><h2 style="margin:0 0 4px;font-size:20px">Mark ${id} as covered</h2><p class="muted small" style="margin:0">You are overriding the agent's decision (${g.cov}, confidence ${fmt(g.conf)}). A reason is required and will be stored in the audit trail.</p>
+ <label class="lbl" for="why">Reason for override</label><textarea id="why" class="input" placeholder="e.g., The escalation procedure exists in the Operations Manual, section 6."></textarea>
+ <div class="btnrow mt"><button class="btn" onclick="saveCover('${id}')">Confirm override</button><button class="btn ghost" onclick="closeAll()">Cancel</button></div>`);setTimeout(()=>$("#why").focus(),50)}
+function saveCover(id){const v=$("#why").value.trim();if(!v){$("#why").style.borderColor="var(--red)";$("#why").setAttribute("aria-invalid","true");toast("Please add a reason for the override.");return}
+ const g=gapById(id);g.decidedBy="human";g.status="done";g.resolution="Override: marked as covered";log("human","Huda A. (Compliance Lead)",`Overrode ${id}: marked as covered`,v);closeAll();render();toast("Override saved to the audit trail.")}
+
+V.actions=()=>{if(!S.analyzed)return needAnalysis("Action Center","Remediation actions with owners, deadlines and status.");
+ const sc=score();
+ return `<div class="head"><div><h1 class="h1">Action Center</h1><p class="sub">Each gap becomes an action with an owner and a deadline. Some were created by the Remediation Agent automatically. Others were approved by a person. Completing actions raises the Trust Score.</p></div><div class="card" style="padding:12px 16px;display:flex;gap:12px;align-items:center"><span class="muted small">Trust Score</span><b style="font-size:24px">${sc}</b>${sc>BASE?`<span class="tag green">+${sc-BASE}</span>`:""}</div></div>
+ ${S.actions.length?`<div class="tw"><table><thead><tr><th>Action</th><th>Gap</th><th>Owner</th><th>Due</th><th>Created by</th><th>Status</th></tr></thead><tbody>
+ ${S.actions.map(a=>{const g=gapById(a.gap);return `<tr><td><span class="id">${a.id}</span><br><b>${esc(a.title)}</b></td><td><span class="id">${a.gap}</span><br>${sevTag(g.sev)}</td><td>${a.owner}</td><td>${a.due} days</td><td>${a.origin==="auto"?'<span class="tag blue">Agent (auto)</span>':'<span class="tag green">Human-approved</span>'}</td>
+ <td>${a.status==="Done"?'<span class="tag green">✓ Done</span>':`<div class="btnrow">${a.status==="Open"?`<button class="btn sm ghost" onclick="startAct('${a.id}')">Start</button>`:'<span class="tag blue" style="align-self:center">In progress</span>'}<button class="btn sm green" onclick="doneAct('${a.id}')">Complete</button></div>`}</td></tr>`}).join("")}
+ </tbody></table></div>`:`<div class="card empty"><h2 class="h1" style="font-size:22px">No actions yet</h2><p>Approve recommendations in Human Review to create actions.</p><button class="btn" onclick="go('review')">Go to Human Review</button></div>`}`};
+function startAct(id){const a=S.actions.find(x=>x.id===id);a.status="In progress";log("human",a.owner+" team",`Started ${id}`,a.title);render()}
+function doneAct(id){const a=S.actions.find(x=>x.id===id),g=gapById(a.gap);a.status="Done";g.status="done";g.decidedBy=g.decidedBy||"auto";
+ log("human",a.owner+" team",`Completed ${id}`,a.title);log("agent","Evidence Agent",`Verified evidence for ${reqById(g.req).cid}`,`{"supports_control": true, "confidence": 0.93}`);log("system","TrustLayer",`Trust Score updated to ${score()}`,`${g.id} resolved (+${g.w})`);render();toast(`${id} completed. Trust Score is now ${score()}.`)}
+
+V.evidence=()=>{const rows=REQS.filter(r=>S.evid[r.cid]||r.cov!=="FULL").slice(0,14);
+ return `<div class="head"><div><h1 class="h1">Evidence & Audit Trail</h1><p class="sub">Every control links to the documents that prove it. Every agent decision and human approval is logged with a time and an actor, which is what auditors and regulators ask for.</p></div></div>
+ <div class="grid g2"><div><div class="tw"><table><thead><tr><th>Control</th><th>Evidence</th><th>Status</th><th></th></tr></thead><tbody>
+ ${S.analyzed?rows.map(r=>{const f=S.evid[r.cid]||[],c=covOf(r),st=c==="FULL"&&f.length?["Complete","green"]:f.length?["Incomplete","orange"]:["Missing","red"];return `<tr><td><span class="id">${r.cid}</span><br>${esc(S.ctrlText[r.cid]||r.control)}</td><td class="small">${f.length?f.map(esc).join("<br>"):"—"}</td><td><span class="tag ${st[1]}">${st[0]}</span></td><td>${st[0]!=="Complete"?`<button class="btn sm ghost" onclick="uploadEv('${r.cid}')">Upload</button>`:""}</td></tr>`}).join(""):`<tr><td colspan="4" class="muted">Run an analysis to see evidence status.</td></tr>`}
+ </tbody></table></div></div>
+ <div class="card"><h3>Audit trail <span class="muted small" style="font-weight:400">· ${S.audit.length} entries</span></h3><div class="muted small" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px"><span><span class="d" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--blue)"></span> Agent</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--green)"></span> Human</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--muted)"></span> System</span></div>
+ <div class="tl" style="max-height:620px;overflow:auto">${S.audit.length?S.audit.map(evRow).join(""):'<p class="muted">No events yet.</p>'}</div>
+ ${S.audit.length?`<button class="btn ghost sm mt" onclick="exportAudit()">Export audit log (CSV)</button>`:""}</div></div>`};
+function uploadEv(cid){const name=`${cid}_evidence_${now().replace(":","")}.pdf`;(S.evid[cid]=S.evid[cid]||[]).push(name);log("human","Huda A. (Compliance Lead)",`Uploaded evidence for ${cid}`,name);log("agent","Evidence Agent",`Classified ${name}`,`{"relevance": "RELEVANT", "supports_control": true, "confidence": 0.91}`);render();toast("Evidence uploaded and checked by the Evidence Agent.")}
+function exportAudit(){const csv="time,type,actor,event,detail\n"+S.audit.map(e=>[e.t,e.kind,e.actor,e.event,e.detail].map(x=>`"${String(x).replace(/"/g,'""')}"`).join(",")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="trustlayer_audit_log.csv";a.click()}
+
+V.copilot=()=>`<div class="head"><div><h1 class="h1">Ask TrustLayer</h1><p class="sub">A copilot that answers only from JordanPay's analyzed documents, controls and evidence, and cites its sources.</p></div></div>
+ <div class="card"><div class="chat" id="chat" aria-live="polite">${[{me:false,t:S.analyzed?"I've reviewed JordanPay's 24 requirements, controls, risks, gaps and evidence. Ask me what to fix first, why a risk is high, or what evidence is missing.":"Run an analysis in Regulatory Intake first. Then I can answer from JordanPay's documents.",c:[]},...S.chat].map(m=>`<div class="msg ${m.me?"me":"ai"}">${m.me?esc(m.t):`<b>TrustLayer AI</b><br>${m.t}`}${m.c&&m.c.length?`<div class="cites">${m.c.map(c=>`<span>${c}</span>`).join("")}</div>`:""}</div>`).join("")}</div>
+ <form class="chatrow" onsubmit="event.preventDefault();ask($('#q').value)"><label for="q" class="hide-s" style="position:absolute;left:-9999px">Your question</label><input id="q" class="input" placeholder="What should we fix first?" autocomplete="off"><button class="btn" type="submit">Ask</button></form>
+ <div class="chips">${["What should we fix first?","What are our highest risks?","Why is KYC failure critical?","What evidence is missing?","How is the Trust Score calculated?","What needs human review?"].map(q=>`<button class="chip" onclick="ask('${q}')">${q}</button>`).join("")}</div>
+ <p class="muted small mt" style="margin-bottom:0">Decision support only. TrustLayer does not make a legal determination of compliance.</p></div>`;
+function answer(q){if(!S.analyzed)return {t:"I don't have any analyzed documents yet. Upload a regulation in Regulatory Intake and run the agents.",c:[]};
+ const og=S.gaps.filter(g=>g.status!=="done").sort((a,b)=>b.w-a.w||b.conf-a.conf);const s=q.toLowerCase();
+ if(/fix|first|priorit|next/.test(s)){if(!og.length)return {t:"All identified gaps are resolved. Next, schedule the quarterly board compliance report (REQ-24).",c:["REQ-24"]};const g=og[0],r=reqById(g.req);return {t:`<b>Priority 1:</b> ${esc(g.rec)}<br>It closes the highest-impact open gap (${g.id}, ${g.sev}) and raises the Trust Score by ${g.w} points.${og[1]?`<br><b>Priority 2:</b> ${esc(og[1].rec)}`:""}`,c:[g.id,g.req,r.src,r.cid]}}
+ if(/why|critical|kyc/.test(s)){const g=gapById("GAP-001");return g.status==="done"?{t:"KYC failure is no longer critical. The escalation procedure (GAP-001) is resolved and its evidence has been verified.",c:["GAP-001","REQ-04","C-04"]}:{t:"KYC failure scores 20/25 (likelihood 4 × impact 5). Two high-priority requirements have no documented control evidence: high-risk customer escalation (REQ-04) and enhanced due diligence for PEPs (REQ-05).",c:["R1","REQ-04 · §5.6 p.19","REQ-05 · §5.8 p.20","GAP-001","GAP-002"]}}
+ if(/risk/.test(s)){const R=RISKS.map(r=>({...r,s:residualL(r)*r.I})).sort((a,b)=>b.s-a.s).slice(0,3);return {t:"Your three highest residual risks:<br>"+R.map((r,i)=>`${i+1}. ${esc(r.name)}: ${r.s} (${lvl(r.s)[0]})`).join("<br>"),c:R.map(r=>r.id)}}
+ if(/evidence|missing|document/.test(s)){const m=REQS.filter(r=>covOf(r)!=="FULL");return m.length?{t:"Evidence is missing or incomplete for:<br>"+m.map(r=>`• ${r.cid}: ${esc(S.ctrlText[r.cid]||r.control)}`).join("<br>"),c:m.map(r=>r.cid)}:{t:"Every mapped control currently has supporting evidence.",c:[]}}
+ if(/score|trust/.test(s))return {t:`The Trust Score starts at the baseline from the first analysis (${BASE}). Each resolved gap adds points by severity: Critical +4, High +3, Medium +2. Today it is <b>${score()}</b>, with ${maxW()-doneW()} points still available from open gaps.`,c:["7 gaps","scoring model v0.1"]};
+ if(/human|review|approve/.test(s)){const p=pending();return {t:p.length?`${p.length} decisions are waiting for a person:<br>`+p.map(g=>`• ${g.id}: ${routeReason(g)}`).join("<br>"):"No decisions are waiting. Every open item is either an action or resolved.",c:p.map(g=>g.id)}}
+ return {t:"I can answer questions about JordanPay's risks, gaps, evidence, reviews and Trust Score. I only answer from analyzed documents, so I won't guess beyond them.",c:[]}}
+function ask(q){q=(q||"").trim();if(!q)return;S.chat.push({me:true,t:q});const a=answer(q);S.chat.push({me:false,...a});render();const c=$("#chat");if(c)c.scrollTop=c.scrollHeight}
+
+V.executive=()=>{if(!S.analyzed)return needAnalysis("Executive GRC Overview","One view for the CEO and the board.");
+ const sc=score(),og=S.gaps.filter(g=>g.status!=="done"),crit=og.filter(g=>g.sev==="Critical").length,R=RISKS.map(r=>({...r,s:residualL(r)*r.I})).sort((a,b)=>b.s-a.s).slice(0,3),done=S.actions.filter(a=>a.status==="Done").length;
+ return `<div class="head"><div><h1 class="h1">Executive GRC Overview</h1><p class="sub">JordanPay · prepared for management and the board</p></div><button class="btn" onclick="boardReport()">Generate board report</button></div>
+ <div class="grid g21"><div class="card"><div class="ringwrap">${ring(sc)}<div style="flex:1;min-width:0"><div style="font-size:20px;font-weight:700">${sc>=85?"Strong":sc>=75?"Moderate, improving":"Moderate"} confidence</div><p class="muted" style="margin:4px 0 0">${og.length?`${og.length} gaps remain, ${crit} of them critical. ${crit?"Management attention is required on KYC controls.":"No critical gaps remain."}`:"All identified gaps are resolved and their evidence is verified."}</p>
+ ${pillars().map(([n,v])=>`<div class="pillar"><span>${n}</span><div class="bar"><i style="width:${v}%"></i></div><b>${v}%</b></div>`).join("")}</div></div></div>
+ <div class="card"><h3>Top risks</h3><ol style="margin:0;padding-left:20px">${R.map(r=>`<li style="margin-bottom:8px">${esc(r.name)} <span class="tag ${lvl(r.s)[1]}">${lvl(r.s)[0]}</span></li>`).join("")}</ol></div></div>
+ <div class="grid g3 mt"><div class="card kpi"><small>Open critical gaps</small><div class="v">${crit}</div></div><div class="card kpi"><small>Awaiting human decision</small><div class="v">${pending().length}</div></div><div class="card kpi"><small>Actions completed</small><div class="v">${done} / ${S.actions.length}</div></div></div>
+ <div class="insight mt"><b>Management insight:</b> ${og.length?esc(`Approve and resource the top action: ${og.sort((a,b)=>b.w-a.w)[0].rec}`):"Maintain the program. Re-run the analysis when the regulator issues new instructions."}</div>`};
+function boardReport(){const og=S.gaps.filter(g=>g.status!=="done");openModal(`<button class="x" onclick="closeAll()" aria-label="Close">×</button><h2 style="margin:0 0 4px;font-size:20px">Board GRC report: JordanPay</h2><p class="muted small" style="margin:0 0 16px">Generated ${new Date().toLocaleDateString()} by TrustLayer AI · sample data</p>
+ <p><b>Trust Score:</b> ${score()} / 100 (baseline ${BASE})</p><p><b>Scope:</b> ${esc(S.doc)}: 24 requirements, 24 mapped controls.</p>
+ <p><b>Open gaps (${og.length}):</b></p><ul>${og.map(g=>`<li>${g.id} (${g.sev}): ${esc(g.title)}</li>`).join("")||"<li>None</li>"}</ul>
+ <p><b>Human oversight:</b> ${S.audit.filter(e=>e.kind==="human").length} human decisions logged · ${pending().length} awaiting review.</p>
+ <p class="muted small">Decision support only. Final compliance decisions remain with qualified professionals.</p>
+ <div class="btnrow mt"><button class="btn" onclick="window.print()">Print / save as PDF</button><button class="btn ghost" onclick="closeAll()">Close</button></div>`)}
+
+/* ---------- Overlays ---------- */
+let lastFocus=null;
+function openDrawer(h){lastFocus=document.activeElement;$("#drawer").innerHTML=h;$("#drawer").classList.add("on");$("#scrim").classList.add("on");setTimeout(()=>$("#drawer .x").focus(),30)}
+function openModal(h){lastFocus=document.activeElement;$("#modal").innerHTML=h;$("#modal").classList.add("on");$("#scrim").classList.add("on")}
+function closeAll(){$("#drawer").classList.remove("on");$("#modal").classList.remove("on");$("#scrim").classList.remove("on");$("#side").classList.remove("on");if(lastFocus&&document.body.contains(lastFocus))lastFocus.focus()}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAll()});
+let tt;function toast(t){const e=$("#toast");e.textContent=t;e.style.display="block";clearTimeout(tt);tt=setTimeout(()=>e.style.display="none",2600)}
+$("#menuBtn").onclick=()=>{$("#side").classList.add("on");$("#scrim").classList.add("on")};
+function resetDemo(){init();closeAll();render();toast("Demo reset.")}
+
+/* ---------- Guided demo ---------- */
+const TOUR=[
+["dashboard","Meet JordanPay","A fictional payments fintech in Amman. Its compliance team has new AML/CFT and KYC instructions to implement."],
+["intake","Upload and run the agents","Press “Analyze with TrustLayer AI.” Six agents read the document and each returns a typed decision with a confidence score."],
+["requirements","Every requirement is traceable","24 obligations, each linked to its page and section. Select a row to see the source and the agent's output."],
+["review","Humans decide what matters","Critical or low-confidence decisions come here. Approve a recommendation to turn it into an action."],
+["actions","From gap to action","Complete an action and watch the Trust Score rise."],
+["evidence","Audit-ready by design","Every agent decision and human approval is logged with a time and an actor."],
+["executive","One view for leadership","Management sees the score, the top risks and what to fix first."]];
+function startTour(){S.tour=0;go(TOUR[0][0])}
+function tourStep(d){S.tour+=d;if(S.tour<0)S.tour=0;if(S.tour>=TOUR.length){S.tour=-1;render();toast("End of the guided demo.");return}go(TOUR[S.tour][0])}
+function renderTour(){const el=$("#tour");document.body.classList.toggle("touring",S.tour>=0);if(S.tour<0){el.classList.remove("on");return}const t=TOUR[S.tour];el.classList.add("on");
+ const hint=S.tour>=2&&!S.analyzed?"<br><i>Tip: run the analysis first (step 2).</i>":"";
+ el.innerHTML=`<div class="t"><small>Guided demo · ${S.tour+1} of ${TOUR.length}</small><b>${t[1]}.</b> ${t[2]}${hint}</div><button class="btn ghost sm" onclick="tourStep(-1)" ${S.tour===0?"disabled":""}>Back</button><button class="btn sm" onclick="tourStep(1)">${S.tour===TOUR.length-1?"Finish":"Next"}</button><button class="btn ghost sm" onclick="S.tour=-1;render()" aria-label="Close guided demo">×</button>`}
+
+render();
+
+</script>
+</body>
+</html>
