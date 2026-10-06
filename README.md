@@ -116,4 +116,4 @@ A clickable front-end prototype with **sample data** for a fictional fintech, *J
 
 ---
 
-*TrustLayer AI: transforming regulatory complexity into actionable risk and compliance intelligence.*
+*TrustLayer AI: AI agents turn regulation into action. Humans stay in charge of the decisions that matter.*
