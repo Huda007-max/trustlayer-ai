@@ -111,7 +111,7 @@ A clickable front-end prototype with **sample data** for a fictional fintech, *J
 ## Contact
 
 - LinkedIn: [linkedin.com/in/hudaahmad1](https://www.linkedin.com/in/hudaahmad1)
-- Email: [PLACEHOLDER]
+- Email: huda.trustlayerai@gmail.com
 - Location: Amman, Jordan
 
 ---
