@@ -18,7 +18,7 @@ Specialized AI agents return **typed decisions with confidence scores**. Confide
 REGULATION → REQUIREMENTS → CONTROLS → RISKS → GAPS → ACTIONS → EVIDENCE → TRUST SCORE
 ```
 
-## The Challenge
+## The Problem
 
 - Financial companies receive hundreds of pages of regulation (KYC/KYB, AML/CFT, monitoring, reporting, third-party risk).
 - Compliance teams map requirements to controls by hand and track evidence in spreadsheets.
