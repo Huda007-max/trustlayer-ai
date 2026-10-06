@@ -83,7 +83,7 @@ The design is model-agnostic. We are evaluating decision-focused models (e.g., T
 
 A clickable front-end prototype with **sample data** for a fictional fintech, *JordanPay*.
 
-- ▶️ Live demo: [TO ADD: link]
+- ▶️ Live demo: https://huda007-max.github.io/trustlayer-ai/
 - Suggested flow: Dashboard → Regulatory Intake → Requirements → Controls → Risk → Gaps → Actions → Executive View
 
 > The demo is a front-end simulation. It has no backend, real AI calls or real customer data.
